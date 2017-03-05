@@ -25,6 +25,7 @@ namespace HalfMoon.Query.ObjectModel
             var s = Intro;
             if (Author != null) s += " The book is written by " + Author + ".";
             if (ReleaseDate != null) s += " The release date is " + ReleaseDate + ".";
+            if (Blurb != null) s += "\n\n" + Blurb;
             return s;
         }
     }

@@ -36,16 +36,20 @@ namespace HalfMoon.Query
             var parser = new WikitextParser();
             var root = parser.Parse(page.Content);
             var template = root.EnumDescendants().OfType<Template>()
-                .FirstOrDefault(t => DistinguishingTemplates.Contains(MwParserUtility.NormalizeTitle(t.Name)));
+                .FirstOrDefault(t => DistinguishingTemplates.Contains(Utility.NormalizeTitle(t.Name)));
             if (template == null) return null;
-            switch (MwParserUtility.NormalizeTitle(template.Name))
+            Entity entity;
+            switch (Utility.NormalizeTitle(template.Name))
             {
                 case "Book":
-                    return BuildVolume(root);
+                    entity =  BuildVolume(root);
+                    break;
                 default:
                     Debug.Assert(false);
                     return null;
             }
+            entity.Name = page.Title;
+            return entity;
         }
 
         private string ExtractIntro(Wikitext root)
@@ -59,29 +63,33 @@ namespace HalfMoon.Query
         private IEnumerable<LineNode> ExtractSection(Wikitext root, Func<Heading, bool> headingSelector)
         {
             Heading currentHeading = null;
-            return root.Lines.SkipWhile(l =>
+            foreach (var l in root.Lines)
             {
                 var h = l as Heading;
-                if (h == null) return false;
-                if (headingSelector(h))
+                if (h != null)
                 {
-                    currentHeading = h;
-                    return true;
+                    if (currentHeading == null)
+                    {
+                        if (headingSelector(h))
+                        {
+                            currentHeading = h;
+                            continue;
+                        }
+                    }
+                    else if (currentHeading.Level >= h.Level)
+                    {
+                        yield break;
+                    }
                 }
-                return false;
-            }).Skip(1).TakeWhile(l =>
-            {
-                var h = l as Heading;
-                if (h?.Level <= currentHeading.Level) return false;
-                return true;
-            });
+                if (currentHeading != null) yield return l;
+            }
         }
 
         private Volume BuildVolume(Wikitext root)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
             var infobox =
-                root.EnumDescendants().OfType<Template>().First(t => MwParserUtility.NormalizeTitle(t.Name) == "Book");
+                root.EnumDescendants().OfType<Template>().First(t => Utility.NormalizeTitle(t.Name) == "Book");
             var entity = new Volume
             {
                 Intro = ExtractIntro(root),

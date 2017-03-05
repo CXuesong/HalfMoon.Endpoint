@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MwParserFromScratch;
 using MwParserFromScratch.Nodes;
 
 namespace HalfMoon.Query
@@ -19,6 +20,13 @@ namespace HalfMoon.Query
         {
             return lines.Where(l => l.EnumChildren().OfType<PlainText>().Any(t => !string.IsNullOrWhiteSpace(t.Content)));
         }
+
+        // TODO Apply patch to MwParserFromScratch.
+        public static string NormalizeTitle(Node title)
+        {
+            return MwParserUtility.NormalizeTitle(title).Trim();
+        }
+
 
         //public static Node NextNodeOuter(this Node node)
         //{

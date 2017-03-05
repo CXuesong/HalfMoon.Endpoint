@@ -23,8 +23,8 @@ namespace HalfMoon.Query
         {
             client = new WikiClient {ClientUserAgent = "HalfMoon/0.1 (https://github.com/CXuesong/HalfMoon.Endpoint)"};
             family = new Family(client, "Warriors Wiki");
-            family.Register("en", "http://warriors.wikia.com");
-            family.Register("zh", "http://warriors.huiji.wiki");
+            family.Register("en", "http://warriors.wikia.com/api.php");
+            family.Register("zh", "http://warriors.huiji.wiki/api.php");
             executor = new QueryExecutor(family);
         }
 
