@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web.Http;
+using Autofac;
+using Autofac.Integration.WebApi;
+using HalfMoon.Query;
 
 namespace HalfMoon.Endpoint
 {
@@ -23,6 +26,7 @@ namespace HalfMoon.Endpoint
             };
 
             // Web API configuration and services
+            SetupResolver(config);
 
             // Web API routes
             config.MapHttpAttributeRoutes();
@@ -32,6 +36,21 @@ namespace HalfMoon.Endpoint
                 routeTemplate: "api/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
+        }
+
+        private static void SetupResolver(HttpConfiguration config)
+        {
+            // http://docs.autofac.org/en/latest/integration/webapi.html
+            var builder = new ContainerBuilder();
+            builder.RegisterApiControllers(typeof(WebApiConfig).Assembly);
+            builder.RegisterType<QueryEngine>().SingleInstance();
+
+            // OPTIONAL: Register the Autofac filter provider.
+            builder.RegisterWebApiFilterProvider(config);
+
+            // Set the dependency resolver to be Autofac.
+            var container = builder.Build();
+            config.DependencyResolver = new AutofacWebApiDependencyResolver(container);
         }
     }
 }

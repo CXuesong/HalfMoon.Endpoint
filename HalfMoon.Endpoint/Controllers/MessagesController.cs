@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Web.Http;
+using HalfMoon.Query;
 using Microsoft.Bot.Connector;
 
 namespace HalfMoon.Endpoint.Controllers
@@ -10,10 +11,20 @@ namespace HalfMoon.Endpoint.Controllers
     [BotAuthentication]
     public class MessagesController : ApiController
     {
+
+        private readonly QueryEngine queryEngine;
+
+        public MessagesController(QueryEngine queryEngine)
+        {
+            if (queryEngine == null) throw new ArgumentNullException(nameof(queryEngine));
+            this.queryEngine = queryEngine;
+        }
+
         public IHttpActionResult Get()
         {
             return Redirect("/");
         }
+
 
         /// <summary>
         /// POST: api/Messages
@@ -24,12 +35,34 @@ namespace HalfMoon.Endpoint.Controllers
             if (activity.Type == ActivityTypes.Message)
             {
                 var connector = new ConnectorClient(new Uri(activity.ServiceUrl));
+                Func<string, Task> replyAsync = text => connector.Conversations.ReplyToActivityAsync(
+                    activity.CreateReply(text));
                 // calculate something for us to return
-                var length = (activity.Text ?? string.Empty).Length;
-
-                // return our reply to the user
-                var reply = activity.CreateReply($"You sent {activity.Text} which was {length} characters");
-                await connector.Conversations.ReplyToActivityAsync(reply);
+                if (string.IsNullOrWhiteSpace(activity.Text))
+                {
+                    await replyAsync("You've sent me a blank message. Weird.");
+                }
+                else
+                {
+                    var text = activity.Text.Trim();
+                    if (text.Length > 100)
+                        await replyAsync("The message is rather long, huh?");
+                    else
+                    {
+                        try
+                        {
+                            var entity = await queryEngine.ExecuteQueryAsync(activity.Text);
+                            if (entity == null)
+                                await replyAsync("Sorry but I cannot find any information on it. Maybe you can ask Gray Wing?");
+                            else
+                                await replyAsync(entity.Describe());
+                        }
+                        catch (Exception ex)
+                        {
+                            await replyAsync("Sorry but I feel there's something wrong…");
+                        }
+                    }
+                }
             }
             else
             {
