@@ -1,0 +1,22 @@
+{
+  "version": 2,
+  "exports": {
+    "Microsoft.Bot.Connector.NetCore/1.0.0": {
+      "type": "project",
+      "framework": ".NETStandard,Version=v1.4",
+      "compile": {
+        "bin/Debug/Microsoft.Bot.Connector.NetCore.dll": {}
+      },
+      "runtime": {
+        "bin/Debug/Microsoft.Bot.Connector.NetCore.dll": {}
+      },
+      "contentFiles": {
+        "bin/Debug/Microsoft.Bot.Connector.NetCore.pdb": {
+          "buildAction": "None",
+          "codeLanguage": "any",
+          "copyToOutput": true
+        }
+      }
+    }
+  }
+}
