@@ -3,8 +3,11 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using HalfMoon.Query;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Bot.Connector;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 // For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
@@ -15,19 +18,17 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
     public class MessagesController : Controller
     {
         private readonly QueryEngine queryEngine;
-        private readonly IOptions<BotFrameworkOptions> bfOptions;
+        private readonly IConfigurationRoot configuration;
+        private readonly ILogger logger;
 
-        public MessagesController(QueryEngine queryEngine, IOptions<BotFrameworkOptions> bfOptions)
+        public MessagesController(QueryEngine queryEngine, IConfigurationRoot configuration, ILoggerFactory loggerFactory)
         {
             if (queryEngine == null) throw new ArgumentNullException(nameof(queryEngine));
-            if (bfOptions == null) throw new ArgumentNullException(nameof(bfOptions));
+            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             this.queryEngine = queryEngine;
-            this.bfOptions = bfOptions;
-        }
-
-        private ConnectorClient CreateConnectorClient(Uri baseUri)
-        {
-            return new ConnectorClient(baseUri, bfOptions.Value.MicrosoftAppId, bfOptions.Value.MicrosoftAppPassword);
+            this.configuration = configuration;
+            logger = loggerFactory.CreateLogger<MessagesController>();
         }
 
         [HttpGet]
@@ -40,12 +41,14 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
         /// POST: api/Messages
         /// Receive a message from a user and reply to it
         /// </summary>
+        [Authorize(Roles = "Bot")]
         [HttpPost]
         public async Task<IActionResult> Post([FromBody]Activity activity)
         {
             if (activity.Type == ActivityTypes.Message)
             {
-                var connector = CreateConnectorClient(new Uri(activity.ServiceUrl));
+                var appCredentials = new MicrosoftAppCredentials(this.configuration);
+                var connector = new ConnectorClient(new Uri(activity.ServiceUrl), appCredentials);
                 Func<string, Task> replyAsync = text => connector.Conversations.ReplyToActivityAsync(
                     activity.CreateReply(text));
                 // calculate something for us to return
@@ -58,18 +61,27 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
                     var text = activity.Text.Trim();
                     if (text.Length > 100)
                         await replyAsync("The message is rather long, huh?");
+                    else if (text.ToLower().Contains("knock"))
+                        await replyAsync("Who?");
                     else
                     {
                         try
                         {
-                            var entity = await queryEngine.ExecuteQueryAsync(activity.Text);
+                            var entity = await queryEngine.ExecuteQueryAsync(text);
                             if (entity == null)
-                                await replyAsync("Sorry but I cannot find any information on it. Maybe you can ask Gray Wing?");
+                            {
+                                logger.LogInformation("Processed query \"{0}\" with null response.", text);
+                                await replyAsync("Sorry but I cannot find any information on it. Why not ask Gray Wing?");
+                            }
                             else
+                            {
+                                logger.LogInformation("Processed query \"{0}\" with response: {1}", text, entity);
                                 await replyAsync(entity.Describe());
+                            }
                         }
                         catch (Exception ex)
                         {
+                            logger.LogError(new EventId(0), ex, ex.Message);
                             await replyAsync("Sorry but I feel there's something wrong…");
                         }
                     }

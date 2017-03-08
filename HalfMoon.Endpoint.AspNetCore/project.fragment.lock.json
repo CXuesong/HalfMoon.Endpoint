@@ -5,30 +5,13 @@
       "type": "project",
       "framework": ".NETStandard,Version=v1.1",
       "compile": {
-        "bin/Debug/HalfMoon.Query.dll": {}
+        "bin/Release/HalfMoon.Query.dll": {}
       },
       "runtime": {
-        "bin/Debug/HalfMoon.Query.dll": {}
+        "bin/Release/HalfMoon.Query.dll": {}
       },
       "contentFiles": {
-        "bin/Debug/HalfMoon.Query.pdb": {
-          "buildAction": "None",
-          "codeLanguage": "any",
-          "copyToOutput": true
-        }
-      }
-    },
-    "Microsoft.Bot.Connector.NetCore/1.0.0": {
-      "type": "project",
-      "framework": ".NETStandard,Version=v1.4",
-      "compile": {
-        "bin/Debug/Microsoft.Bot.Connector.NetCore.dll": {}
-      },
-      "runtime": {
-        "bin/Debug/Microsoft.Bot.Connector.NetCore.dll": {}
-      },
-      "contentFiles": {
-        "bin/Debug/Microsoft.Bot.Connector.NetCore.pdb": {
+        "bin/Release/HalfMoon.Query.pdb": {
           "buildAction": "None",
           "codeLanguage": "any",
           "copyToOutput": true

@@ -14,7 +14,7 @@ namespace HalfMoon.Endpoint.AspNetCore
         {
             var host = new WebHostBuilder()
                 .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseContentRoot(Path.Combine(Directory.GetCurrentDirectory()))
                 .UseIISIntegration()
                 .UseStartup<Startup>()
                 .Build();

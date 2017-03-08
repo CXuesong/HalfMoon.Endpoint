@@ -7,6 +7,8 @@ using Autofac.Extensions.DependencyInjection;
 using HalfMoon.Query;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Bot.Connector;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -31,27 +33,19 @@ namespace HalfMoon.Endpoint.AspNetCore
         public IConfigurationRoot Configuration { get; }
 
         // This method gets called by the runtime. Use this method to add services to the container.
-        public IServiceProvider ConfigureServices(IServiceCollection services)
+        public void ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
-            services.AddMvc();
+            services.AddMvc(options =>
+            {
+                options.Filters.Add(typeof(TrustServiceUrlAttribute));
+            });
 
             services.AddOptions();
 
+            services.AddSingleton(_ => Configuration);
+            services.AddSingleton<QueryEngine>();
             services.Configure<BotFrameworkOptions>(Configuration.GetSection("BotFramework"));
-
-            // http://docs.autofac.org/en/latest/integration/aspnetcore.html
-            var builder = new ContainerBuilder();
-            // Register dependencies, populate the services from
-            // the collection, and build the container. If you want
-            // to dispose of the container at the end of the app,
-            // be sure to keep a reference to it as a property or field.
-            builder.Populate(services);
-            builder.RegisterType<QueryEngine>().SingleInstance();
-
-            // Set the dependency resolver to be Autofac.
-            ApplicationContainer = builder.Build();
-            return new AutofacServiceProvider(ApplicationContainer);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -59,6 +53,17 @@ namespace HalfMoon.Endpoint.AspNetCore
         {
             loggerFactory.AddConsole(Configuration.GetSection("Logging"));
             loggerFactory.AddDebug();
+
+            // We use this application behind a reverse proxy.
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+            });
+
+            app.UseBotAuthentication(new StaticCredentialProvider(
+                Configuration.GetSection(MicrosoftAppCredentials.MicrosoftAppIdKey)?.Value,
+                Configuration.GetSection(MicrosoftAppCredentials.MicrosoftAppPasswordKey)?.Value
+            ));
 
             app.UseMvc();
 

@@ -17,7 +17,6 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\HalfMoon.Query\HalfMoon.Query.csproj" />
-    <ProjectReference Include="..\Microsoft.Bot.Connector.NetCore\Microsoft.Bot.Connector.NetCore.csproj" />
   </ItemGroup>
   <Import Project="$(VSToolsPath)\DotNet.Web\Microsoft.DotNet.Web.targets" Condition="'$(VSToolsPath)' != ''" />
 </Project>
