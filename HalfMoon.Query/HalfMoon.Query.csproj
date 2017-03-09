@@ -42,7 +42,9 @@
     <Compile Include="Intents\Intent.cs" />
     <Compile Include="Intents\IntentMatcher.cs" />
     <Compile Include="ObjectModel\Character.cs" />
+    <Compile Include="ObjectModel\DisambiguationEntity.cs" />
     <Compile Include="ObjectModel\Entity.cs" />
+    <Compile Include="ObjectModel\UnknownEntity.cs" />
     <Compile Include="RegexPatternAttribute.cs" />
     <Compile Include="ObjectModel\Volume.cs" />
     <Compile Include="QueryEngine.cs" />

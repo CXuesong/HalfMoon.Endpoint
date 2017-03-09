@@ -77,6 +77,8 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
                             {
                                 logger.LogInformation("Processed query \"{0}\" with response: {1}", text, entity);
                                 await replyAsync(entity.Describe());
+                                await replyAsync(string.Format("You may visit {0} for more information.",
+                                    entity.DetailUrl));
                             }
                         }
                         catch (Exception ex)
@@ -96,6 +98,8 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
 
         private Activity HandleSystemMessage(Activity message)
         {
+            //var appCredentials = new MicrosoftAppCredentials(this.configuration);
+            //var connector = new ConnectorClient(new Uri(message.ServiceUrl), appCredentials);
             if (message.Type == ActivityTypes.DeleteUserData)
             {
                 // Implement user deletion here
@@ -111,6 +115,7 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
             {
                 // Handle add/remove from contact lists
                 // Activity.From + Activity.Action represent what happened
+               logger.LogInformation(message.Action);
             }
             else if (message.Type == ActivityTypes.Typing)
             {
