@@ -11,12 +11,16 @@ namespace HalfMoon.Query.ObjectModel
     /// </summary>
     public class Volume : Entity
     {
+        
+        [RegexPattern("author|writer", "en")]
         public string Author { get; set; }
 
         //public string ArcName { get; set; }
 
+        [RegexPattern("(publication|publish|release) date", "en")]
         public string ReleaseDate { get; set; }
 
+        [RegexPattern("blurb|intro(duct(ion)?)?", "en")]
         public string Blurb { get; set; }
 
         /// <inheritdoc />
@@ -28,5 +32,6 @@ namespace HalfMoon.Query.ObjectModel
             if (Blurb != null) s += "\n\n" + Blurb;
             return s;
         }
+
     }
 }

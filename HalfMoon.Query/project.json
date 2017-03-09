@@ -2,7 +2,7 @@
   "supports": {},
   "dependencies": {
     "CXuesong.MW.MwParserFromScratch": "0.1.0-beta",
-    "CXuesong.MW.WikiClientLibrary": "0.4.0-alpha",
+    "CXuesong.MW.WikiClientLibrary": "0.5.0-int0",
     "Microsoft.NETCore.Portable.Compatibility": "1.0.1",
     "NETStandard.Library": "1.6.0"
   },

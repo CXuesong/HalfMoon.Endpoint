@@ -59,7 +59,7 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
                 else
                 {
                     var text = activity.Text.Trim();
-                    if (text.Length > 100)
+                    if (text.Length > 300)
                         await replyAsync("The message is rather long, huh?");
                     else if (text.ToLower().Contains("knock"))
                         await replyAsync("Who?");

@@ -25,7 +25,7 @@ namespace HalfMoon.Query
 
         public string LanguageCode => "en";
 
-        private static readonly IList<string> DistinguishingTemplates = new[] {"Book"};
+        private static readonly IList<string> distinguishingTemplates = new[] {"Book", "Charcat" };
 
         public async Task<Entity> QueryByNameAsync(string name)
         {
@@ -36,13 +36,16 @@ namespace HalfMoon.Query
             var parser = new WikitextParser();
             var root = parser.Parse(page.Content);
             var template = root.EnumDescendants().OfType<Template>()
-                .FirstOrDefault(t => DistinguishingTemplates.Contains(Utility.NormalizeTitle(t.Name)));
+                .FirstOrDefault(t => distinguishingTemplates.Contains(Utility.NormalizeTitle(t.Name)));
             if (template == null) return null;
             Entity entity;
             switch (Utility.NormalizeTitle(template.Name))
             {
                 case "Book":
                     entity =  BuildVolume(root);
+                    break;
+                case "Charcat":
+                    entity = BuildCat(root);
                     break;
                 default:
                     Debug.Assert(false);
@@ -52,39 +55,6 @@ namespace HalfMoon.Query
             return entity;
         }
 
-        private string ExtractIntro(Wikitext root)
-        {
-            var lines = root.Lines.TakeWhile(l => !(l is Heading)).NonEmptyLines();
-            var s = string.Join("\n", lines.Select(l => l.ToPlainText(NodePlainTextOptions.RemoveRefTags).Trim()));
-            if (s == "") return null;
-            return s;
-        }
-
-        private IEnumerable<LineNode> ExtractSection(Wikitext root, Func<Heading, bool> headingSelector)
-        {
-            Heading currentHeading = null;
-            foreach (var l in root.Lines)
-            {
-                var h = l as Heading;
-                if (h != null)
-                {
-                    if (currentHeading == null)
-                    {
-                        if (headingSelector(h))
-                        {
-                            currentHeading = h;
-                            continue;
-                        }
-                    }
-                    else if (currentHeading.Level >= h.Level)
-                    {
-                        yield break;
-                    }
-                }
-                if (currentHeading != null) yield return l;
-            }
-        }
-
         private Volume BuildVolume(Wikitext root)
         {
             if (root == null) throw new ArgumentNullException(nameof(root));
@@ -92,16 +62,29 @@ namespace HalfMoon.Query
                 root.EnumDescendants().OfType<Template>().First(t => Utility.NormalizeTitle(t.Name) == "Book");
             var entity = new Volume
             {
-                Intro = ExtractIntro(root),
+                Intro = root.ExtractIntro(),
                 Author = infobox.Arguments["author"]?.Value.FirstWikiLink()?.ToPlainText(),
                 ReleaseDate = infobox.Arguments["publish date"]?.Value.ToPlainText(NodePlainTextOptions.RemoveRefTags),
             };
             {
-                var lines = ExtractSection(root, h =>
-                        h.ToPlainText().IndexOf("Blurb", StringComparison.CurrentCultureIgnoreCase) >= 0)
-                    .Select(l => l.ToPlainText(NodePlainTextOptions.RemoveRefTags).Trim());
+                var lines = root.ExtractSection("Blurb").Select(l => l.StripText());
                 entity.Blurb = string.Join("\n", lines);
             }
+            return entity;
+        }
+
+        private Character BuildCat(Wikitext root)
+        {
+            if (root == null) throw new ArgumentNullException(nameof(root));
+            var infobox =
+                root.EnumDescendants().OfType<Template>().First(t => Utility.NormalizeTitle(t.Name) == "Charcat");
+            var entity = new Character
+            {
+                Intro = root.ExtractIntro(),
+                Age = infobox.Arguments["age"]?.Value.StripText(),
+                PastAffiliation = infobox.Arguments["pastaffie"]?.Value.EnumDescendants().OfType<WikiLink>().Select(l => l.Target.StripText()).ToArray(),
+                CurrentAffiliation = infobox.Arguments["affie"]?.Value.EnumDescendants().OfType<WikiLink>().Select(l => l.Target.StripText()).ToArray(),
+            };
             return entity;
         }
     }
