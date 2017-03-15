@@ -8,6 +8,7 @@ using HalfMoon.Query;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.Bot.Builder.Dialogs;
 using Microsoft.Bot.Connector;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -35,10 +36,15 @@ namespace HalfMoon.Endpoint.AspNetCore
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            // Authentication for Microsoft Bot Framework.
+            services.AddSingleton(_ => new MicrosoftAppCredentials(Configuration,
+                _.GetService<ILoggerFactory>().CreateLogger<MicrosoftAppCredentials>()));
+            services.AddSingleton<Conversation>();
+
             // Add framework services.
             services.AddMvc(options =>
             {
-                options.Filters.Add(typeof(TrustServiceUrlAttribute));
+                options.Filters.Add(new TrustServiceUrlAttribute());
             });
 
             services.AddOptions();
@@ -66,9 +72,6 @@ namespace HalfMoon.Endpoint.AspNetCore
             ));
 
             app.UseMvc();
-
-            // If you want to dispose of resources that have been resolved in the
-            // application container, register for the "ApplicationStopped" event.
         }
     }
 }

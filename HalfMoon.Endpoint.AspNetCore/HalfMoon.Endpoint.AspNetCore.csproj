@@ -2,12 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp1.0</TargetFramework>
-    <PreserveCompilationContext>true</PreserveCompilationContext>
-    <AssemblyName>HalfMoon.Endpoint.AspNetCore</AssemblyName>
-    <OutputType>Exe</OutputType>
-    <PackageId>HalfMoon.Endpoint.AspNetCore</PackageId>
-    <RuntimeFrameworkVersion>1.0.4</RuntimeFrameworkVersion>
-    <PackageTargetFallback>$(PackageTargetFallback);dotnet5.6;portable-net45+win8</PackageTargetFallback>
   </PropertyGroup>
 
   <ItemGroup>
@@ -18,6 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="CXuesong.Ported.Microsoft.Bot.Builder" Version="3.5.1-int2" />
+    <PackageReference Include="CXuesong.Ported.Microsoft.Bot.Builder.Autofac" Version="3.5.1-int1" />
+    <PackageReference Include="CXuesong.Ported.Microsoft.Bot.Connector.AspNetCore" Version="3.5.1-int3" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="1.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Routing" Version="1.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Server.IISIntegration" Version="1.0.2" />
@@ -31,8 +28,6 @@
     <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="1.0.2" />
     <PackageReference Include="CXuesong.MW.MwParserFromScratch" Version="0.1.0-beta" />
     <PackageReference Include="Autofac.Extensions.DependencyInjection" Version="4.0.0" />
-    <PackageReference Include="Microsoft.Bot.Connector" Version="3.5.1-alpha" />
-    <PackageReference Include="Microsoft.Cognitive.LUIS" Version="1.0.0" />
     <PackageReference Include="CXuesong.MW.WikiClientLibrary" Version="0.5.0-int1" />
   </ItemGroup>
 

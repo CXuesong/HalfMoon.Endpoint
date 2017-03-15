@@ -18,16 +18,16 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
     public class MessagesController : Controller
     {
         private readonly QueryEngine queryEngine;
-        private readonly IConfigurationRoot configuration;
+        private readonly MicrosoftAppCredentials credentials;
         private readonly ILogger logger;
 
-        public MessagesController(QueryEngine queryEngine, IConfigurationRoot configuration, ILoggerFactory loggerFactory)
+        public MessagesController(QueryEngine queryEngine, MicrosoftAppCredentials credentials, ILoggerFactory loggerFactory)
         {
             if (queryEngine == null) throw new ArgumentNullException(nameof(queryEngine));
-            if (configuration == null) throw new ArgumentNullException(nameof(configuration));
+            if (credentials == null) throw new ArgumentNullException(nameof(credentials));
             if (loggerFactory == null) throw new ArgumentNullException(nameof(loggerFactory));
             this.queryEngine = queryEngine;
-            this.configuration = configuration;
+            this.credentials = credentials;
             logger = loggerFactory.CreateLogger<MessagesController>();
         }
 
@@ -36,6 +36,8 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
         {
             return Redirect("/");
         }
+
+        private const string PROMPT_GUIDE = "If you want to learn something on Warriors, just type in the words. For example, you may type Half Moon to learn something about me ^_^";
 
         /// <summary>
         /// POST: api/Messages
@@ -47,8 +49,7 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
         {
             if (activity.Type == ActivityTypes.Message)
             {
-                var appCredentials = new MicrosoftAppCredentials(this.configuration);
-                var connector = new ConnectorClient(new Uri(activity.ServiceUrl), appCredentials);
+                var connector = new ConnectorClient(new Uri(activity.ServiceUrl), credentials);
                 Func<string, Task> replyAsync = text => connector.Conversations.ReplyToActivityAsync(
                     activity.CreateReply(text));
                 // calculate something for us to return
@@ -62,7 +63,11 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
                     if (text.Length > 300)
                         await replyAsync("The message is rather long, huh?");
                     else if (text.ToLower().Contains("knock"))
+                    {
                         await replyAsync("Who?");
+                        await replyAsync("Well, I'm now runnig on .NET Core, which is unfortunately total stateless.\n" +
+                            PROMPT_GUIDE);
+                    }
                     else
                     {
                         try
@@ -72,6 +77,7 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
                             {
                                 logger.LogInformation("Processed query \"{0}\" with null response.", text);
                                 await replyAsync("Sorry but I cannot find any information on it. Why not ask Gray Wing?");
+                                await replyAsync("If you still have no idea what \"Warriors\" is, you can just type \"Into the Wild\", and I will tell you something.");
                             }
                             else
                             {
@@ -79,6 +85,13 @@ namespace HalfMoon.Endpoint.AspNetCore.Controllers
                                 await replyAsync(entity.Describe());
                                 await replyAsync(string.Format("You may visit {0} for more information.",
                                     entity.DetailUrl));
+                                switch (entity.Name)
+                                {
+                                    case "Half Moon":
+                                        await replyAsync(
+                                            "Well, it may seem weird, but some gray tabby nerd is also working on a two-leggish bot with the same name.");
+                                        break;
+                                }
                             }
                         }
                         catch (Exception ex)
